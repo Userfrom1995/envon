@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "envon"
+version = "0.1.2"
+description = "Emit the activation command for the nearest Python virtual environment and install shell bootstrap wrappers."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+keywords = ["virtualenv", "venv", "activation", "shell", "bootstrap"]
+authors = [{ name = "User1995", email = "userfrom1995@gmail.com" }]
+urls = { "Homepage" = "https://github.com/userfrom1995/envon", "Repository" = "https://github.com/userfrom1995/envon" }
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Environment :: Console",
+  "Topic :: System :: Shells",
+  "Topic :: Software Development :: Build Tools",
+]
+
+# Require virtualenv so activator plugins are always available
+dependencies = [
+  "virtualenv>=20"
+]
+
+[project.scripts]
+envon = "envon.envon:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/envon"]
+
+# Ensure non-Python bootstrap files are included
+[tool.hatch.build]
+include = [
+  "src/envon/bootstrap_*.sh",
+  "src/envon/bootstrap_*.fish",
+  "src/envon/bootstrap_*.ps1",
+  "src/envon/bootstrap_csh.csh",
+  "src/envon/bootstrap_*.nu",
+  "src/envon/*.py",
+  "README.md",
+  "LICENSE",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/envon/**",
+  "README.md",
+  "LICENSE",
+]
