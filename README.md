@@ -1,103 +1,72 @@
 # envon
 
-Emit the exact shell command to activate the nearest or specified Python virtual environment. Optionally install a small shell wrapper so you can just type `envon` to activate a venv in-place.
+Emit the activation command for the nearest or specified Python virtual environment, and install shell bootstrap wrappers for seamless activation in your favorite shell.
 
-Works across shells: bash, zsh, sh, fish, Nushell, PowerShell, and csh/tcsh. The `virtualenv` package is installed automatically and `envon` uses its activation plug-ins; when not applicable, it falls back to common activation paths.
+## Features
+- Auto-detects and activates Python virtual environments in your project.
+- Supports multiple shells: bash, zsh, sh, fish, powershell, pwsh, nushell, cmd, csh/tcsh/cshell.
+- Installs a shell bootstrap function for one-command activation.
+- Flexible CLI flags for advanced usage.
+
+## Supported Shells
+- **bash** (full auto-activation)
+- **zsh** (full auto-activation)
+- **sh** (full auto-activation)
+- **fish** (full auto-activation)
+- **powershell**, **pwsh** (full auto-activation)
+- **cmd**, **batch**, **bat** (prints command for manual activation)
+- **nushell**, **nu** (prints command for manual activation)
+- **csh**, **tcsh**, **cshell** (prints command for manual activation)
+
+For detailed shell support and limitations, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
 ## Installation
-
-From PyPI:
-
+**Recommended:** Install with pipx for isolated environments:
 ```bash
-python -m pip install envon
+pipx install envon
 ```
 
-This installs a console script named `envon` into your environment.
-
-## Quick usage
-
-- In a project with a `.venv` (or `venv`, `env`, `.env`) folder:
-	- Run `envon` and it will print the activation command for your current shell.
-	- Wrap it with the provided bootstrap so it executes the activation command for you.
-
-Examples:
-
+**Alternative:** Install with pip (may fail on some distros like Ubuntu or Windows due to PEP 668):
 ```bash
-# Print the shell command to activate the nearest venv
-envon
+python3 -m pip install envon
+```
 
-# Activate now (bash/zsh):
-eval "$(envon)"
-
-# Or install the bootstrap once so `envon` activates directly
+After installation, run:
+```bash
 envon --install
 ```
+This detects your shell and sets up the bootstrap for auto-activation.
 
-You can target a specific environment:
+For more detailed installation instructions, see [docs/installation.md](https://github.com/userfrom1995/envon/blob/main/docs/installation.md).
 
+## Usage
+After installation and bootstrap setup, run:
 ```bash
-envon /path/to/project/.venv
-envon /path/to/project               # will search for .venv, venv, env, .env under the dir
-envon myenv                          # will resolve from $WORKON_HOME/myenv if set
+envon
 ```
+This will activate the nearest virtual environment in your project.
 
-## Shell bootstrap
+Supported flags: `--emit [SHELL]`, `--print-path`, `--install [SHELL]`.
 
-`envon --install` detects your shell and adds a small wrapper to your shell profile. After that, typing `envon` will activate the nearest venv (or a specified one) without having to `eval`.
-
-Supported shells: bash, zsh, sh, fish, Nushell, PowerShell (Windows and POSIX), csh/tcsh.
-
-To force a particular shell during installation:
-
-```bash
-envon --install bash
-envon --install fish
-envon --install nushell
-envon --install powershell
-envon --install csh
-```
-
-## How it works
-
-- Searches for a venv in the current directory first; if multiple exist, it prompts to choose (when in a TTY).
-- If none, walks up parent directories to find a common venv name like `.venv`.
-- If still none, and an environment is already active via `$VIRTUAL_ENV`, it respects that.
-- Otherwise, errors with guidance to create a venv or pass a path.
-- Determines the current shell and emits the corresponding activation command (or uses `virtualenv` activators when available).
+For advanced usage, examples, and all flags, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
 ## Development
+For development setup, building, and project structure, see [docs/development.md](https://github.com/userfrom1995/envon/blob/main/docs/development.md).
 
-This project uses a modern PEP 517 build via `pyproject.toml`.
+## Contributor Note
 
-Setup a dev environment:
+**envon is in its early phase. Basic functionality is solid, but we welcome help!**
+- TCSH/cshell and Nushell support need improvement (auto-activation, overlays).
+- If you find issues, please [raise an issue](https://github.com/userfrom1995/envon/issues).
+- If you'd like to contribute, fork and submit a PR—contributions are very welcome!
 
-```bash
-python -m venv .venv
-. .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
-python -m pip install -U pip build
-pip install -e .
-```
+Let's make envon the best Python venv activator for every shell!
 
-Run the CLI from source:
+## Release Notes
 
-```bash
-python -m envon --help
-envon --help
-```
+**Version 0.1.1 (First Release)**  
+This is the initial release of envon. A lot of work is still ongoing, especially in the testing, CI, and adding support for missing shells (e.g., full auto-activation for Nushell and csh/tcsh).  
 
-Build artifacts:
+If you see any issues, feel free to [open an issue](https://github.com/userfrom1995/envon/issues). If you're interested in contributing, feel free to submit a PR. If you have ideas or anything regarding the project, feel free to open a discussion or feature request in an issue.  
 
-```bash
-python -m build
-```
-
-Publish to PyPI (requires `twine` and credentials):
-
-```bash
-python -m pip install -U twine
-twine upload dist/*
-```
-
-## License
-
-MIT
+Check out the project on [PyPI](https://pypi.org/project/envon/).
