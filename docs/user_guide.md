@@ -2,19 +2,23 @@
 
 ## CLI Flags
 
-- `target` (positional): Path, project root, or name (searched in WORKON_HOME)
-- `--emit [SHELL]`: Emit activation command for the specified shell (bash, zsh, sh, fish, cshell, nushell, powershell, pwsh, cmd). If omitted, auto-detects shell.
-- `--print-path`: Print only the resolved virtual environment path and exit.
-- `--install [SHELL]`: Install envon bootstrap function directly to shell configuration file. If omitted, auto-detects shell.
-- `-h`, `--help`: Show help message and exit.
+- `target` (optional): Path to venv directory, project root containing venvs, or venv name (WORKON_HOME fallback only)
+- `--emit [SHELL]`: Emit activation command for the specified shell. If omitted, auto-detects shell.
+- `--print-path`: Print only the resolved virtual environment path.
+- `--install [SHELL]`: Install envon bootstrap function. If omitted, auto-detects shell.
+- `-h`, `--help`: Show help.
+
+**Note:** When no target is provided, envon searches the current directory first, then walks up parent directories.
 
 ## Basic Functionality
 
-- If no target is provided, envon searches for a virtual environment in the current directory (preferred names: `.venv`, `venv`, `env`, `.env`).
-- If multiple venvs are found, prompts for selection.
-- If none found, walks up parent directories for preferred names.
-- If still none, checks if `VIRTUAL_ENV` is set and valid.
-- If all fail, raises an error.
+envon searches for virtual environments in this order:
+1. **Current directory**: Looks for preferred names (`.venv`, `venv`, `env`, `.env`) and any other venv subdirectories
+2. **Parent directories**: Walks upward checking each parent for preferred names only
+3. **Active environment**: Uses `VIRTUAL_ENV` if set and valid
+4. **Error**: If nothing found
+
+When multiple venvs are found at the same level, prompts for interactive selection.
 
 ## Shell Support
 
