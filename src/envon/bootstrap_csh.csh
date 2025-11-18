@@ -1,4 +1,4 @@
-﻿#!usr/bin/tcsh -f
+#!usr/bin/tcsh -f
 #! /bin/tcsh -f
 # envon wrapper script for tcsh compatibility
 

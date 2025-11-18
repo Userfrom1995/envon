@@ -1,4 +1,4 @@
-﻿def --env envon [...args] {
+def --env envon [...args] {
   if ($args | is-empty) == false {
     let first = ($args | first)
     if $first == '--' { let args = ($args | skip 1); ^envon ...$args; return }
