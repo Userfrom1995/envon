@@ -1,13 +1,13 @@
 %global srcname envon
 
 Name:           python3-%{srcname}
-Version:        0.1.1
+Version:        0.1.3
 Release:        1%{?dist}
 Summary:        Emit the activation command for the nearest Python virtual environment
 
 License:        MIT
 URL:            https://github.com/userfrom1995/%{srcname}
-Source0:        https://github.com/userfrom1995/%{srcname}/archive/refs/tags/v%{version}.tar.gz#/%{srcname}-%{version}.tar.gz
+Source0:        https://files.pythonhosted.org/packages/source/e/%{srcname}/%{srcname}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
@@ -43,7 +43,7 @@ cp -r src/%{srcname}/bootstrap_*.ps1 %{buildroot}%{_datadir}/%{srcname}/
 cp -r src/%{srcname}/bootstrap_*.csh %{buildroot}%{_datadir}/%{srcname}/
 cp -r src/%{srcname}/bootstrap_*.nu %{buildroot}%{_datadir}/%{srcname}/
 
-%files
+%files -n python3-%{srcname}
 %license LICENSE
 %doc README.md docs/
 %{python3_sitelib}/%{srcname}-%{version}.dist-info/
@@ -52,6 +52,8 @@ cp -r src/%{srcname}/bootstrap_*.nu %{buildroot}%{_datadir}/%{srcname}/
 %{_datadir}/%{srcname}/
 
 %changelog
+* Sun Nov 23 2025 User1995 <userfrom1995@gmail.com> - 0.1.3-1
+- Update to include documentation files in source tarball
+
 * Tue Nov 18 2025 User1995 <userfrom1995@gmail.com> - 0.1.1-1
-- Initial package</content>
-<parameter name="filePath">\\wsl.localhost\Ubuntu\home\base\envon\python-envon.spec
+- Initial package

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "envon"
-version = "0.1.1"
+version = "0.1.3"
 description = "Emit the activation command for the nearest Python virtual environment and install shell bootstrap wrappers."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -49,7 +49,7 @@ include = [
 [tool.hatch.build.targets.sdist]
 include = [
   "src/envon/**",
+  "docs/**",
   "README.md",
   "LICENSE",
-  "docs/**",
 ]
