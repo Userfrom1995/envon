@@ -7,7 +7,10 @@ Summary:        Emit the activation command for the nearest Python virtual envir
 
 License:        MIT
 URL:            https://github.com/userfrom1995/%{srcname}
-Source0:        https://files.pythonhosted.org/packages/source/e/%{srcname}/%{srcname}-%{version}.tar.gz
+# Source tarball built from git using: python3 -m build --sdist
+# Upstream PyPI: https://pypi.org/project/envon/
+# Source:        https://files.pythonhosted.org/packages/source/e/%{srcname}/%{srcname}-%{version}.tar.gz
+Source0:        %{srcname}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
@@ -19,10 +22,10 @@ BuildRequires:  python3-installer
 Requires:       python3-virtualenv >= 20
 
 %description
-envon is a cross-shell Python virtual environment activator that emits the correct
-activation command for your shell. It auto-detects the nearest or specified virtual
-environment and supports bash, zsh, sh, fish, powershell, pwsh, nushell, cmd, and
-csh/tcsh/cshell.
+envon is a cross-shell Python virtual environment activator that emits
+the correct activation command for your shell. It auto-detects the
+nearest or specified virtual environment and supports bash, zsh, sh,
+fish, powershell, pwsh, nushell, cmd, and csh/tcsh/cshell.
 
 %prep
 %autosetup -n %{srcname}-%{version}
