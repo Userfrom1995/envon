@@ -1,7 +1,8 @@
 envon() {
   if [ "$#" -gt 0 ]; then
     case "$1" in
-      help|-h|--help|--install) command envon "$@"; return $? ;;
+      help|-h|--help|--install|--print-path) command envon "$@"; return $? ;;
+      -d|--deactivate) ;; # Allow these to be eval'd
       -*) command envon "$@"; return $? ;;
     esac
   fi

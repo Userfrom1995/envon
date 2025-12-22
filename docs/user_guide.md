@@ -6,6 +6,7 @@
 - `--emit [SHELL]`: Emit activation command for the specified shell. If omitted, auto-detects shell.
 - `--print-path`: Print only the resolved virtual environment path.
 - `--install [SHELL]`: Install envon bootstrap function. If omitted, auto-detects shell.
+- `-d`, `--deactivate [SHELL]`: Emit deactivation command for the specified shell. If omitted, auto-detects shell.
 - `-h`, `--help`: Show help.
 
 **Note:** When no target is provided, envon searches the current directory first, then walks up parent directories.
@@ -22,17 +23,17 @@ When multiple venvs are found at the same level, prompts for interactive selecti
 
 ## Shell Support
 
-| Shell         | Auto-activation | Notes                                      |
-|---------------|----------------|--------------------------------------------|
-| bash          | Yes            | Full support                               |
-| zsh           | Yes            | Uses bash bootstrap                        |
-| sh            | Yes            | Full support                               |
-| fish          | Yes            | Full support                               |
-| powershell    | Yes            | Manual profile edit required on Windows     |
-| pwsh          | Yes            | Same as powershell                         |
-| nushell, nu   | No             | Prints overlay use command; manual run      |
-| cmd, batch, bat | Yes          | Prints activation command                   |
-| csh, tcsh, cshell | No         | Only prints command; no auto-activation     |
+| Shell         | Auto-activation| Deactivation | Notes                                              |
+|---------------|----------------|--------------|----------------------------------------------------|
+| bash          | Yes            | Yes          | Full support                                       |
+| zsh           | Yes            | Yes          | Uses bash bootstrap                                |
+| sh            | Yes            | Yes          | Full support                                       |
+| fish          | Yes            | Yes          | Full support                                       |
+| powershell    | Yes            | Manual       | Manual profile edit required on Windows            |
+| pwsh          | Yes            | Manual       | Same as powershell                                 |
+| nushell, nu   | Manual         | Manual       | Prints commands for manual activation/deactivation |
+| cmd, batch, bat | Manual       | Manual       | Prints commands for manual activation/deactivation |
+| csh, tcsh, cshell | Manual     | Manual       | Prints commands for manual activation/deactivation |
 
 
 ## CLI Usage Patterns
@@ -103,3 +104,15 @@ envon --install
 envon --install zsh
 envon --install powershell
 ```
+
+### Deactivate virtual environment
+```bash
+envon -d
+envon --deactivate
+envon --deactivate bash
+```
+
+**Note:** Deactivation support varies by shell:
+- **bash, zsh, sh, fish**: Full auto-deactivation
+- **powershell, pwsh**: Prints deactivation command for manual execution
+- **nushell, cmd, csh/tcsh**: Prints deactivation command for manual execution

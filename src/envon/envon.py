@@ -409,6 +409,25 @@ def _emit_activation_fallback(venv: Path, shell: str) -> str:
     )
 
 
+def emit_deactivation(shell: str) -> str:
+    """Generate deactivation command for the given shell."""
+    shell = shell.lower()
+
+    # Map shell names to their deactivation commands
+    # Most shells use a simple 'deactivate' function/command provided by the venv
+    if shell in {"bash", "zsh", "sh", "fish", "csh", "tcsh", "cshell", "powershell", "pwsh"}:
+        return "deactivate"
+    elif shell in {"nu", "nushell"}:
+        # Nushell uses deactivate function when available
+        return "deactivate"
+    elif shell in {"cmd", "batch", "bat"}:
+        # cmd uses the deactivate command
+        return "deactivate"
+    else:
+        # Fallback - most virtualenvs provide a deactivate function
+        return "deactivate"
+
+
 ## Nushell: uses overlay use on activate.nu directly
 
 
@@ -441,6 +460,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help=(
             "Install envon bootstrap function directly to shell configuration file. "
             "If SHELL is omitted, auto-detect."
+        ),
+    )
+    p.add_argument(
+        "-d",
+        "--deactivate",
+        nargs="?",
+        const="",
+        metavar="SHELL",
+        help=(
+            "Emit deactivation command. If SHELL is provided, use it; "
+            "if omitted, auto-detect the current shell."
         ),
     )
     return p.parse_args(argv)
@@ -825,6 +855,11 @@ def main(argv: list[str] | None = None) -> int:
         if ns.install is not None:
             result = install_bootstrap(ns.install)
             print(result)
+            return 0
+        if ns.deactivate is not None:
+            shell = detect_shell(ns.deactivate)
+            cmd = emit_deactivation(shell)
+            print(cmd)
             return 0
         venv = resolve_target(ns.target)
         if ns.print_path:

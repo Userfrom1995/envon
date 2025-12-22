@@ -9,14 +9,14 @@ Emit the activation command for the nearest or specified Python virtual environm
 - Flexible CLI flags for advanced usage.
 
 ## Supported Shells
-- **bash** (full auto-activation)
-- **zsh** (full auto-activation)
-- **sh** (full auto-activation)
-- **fish** (full auto-activation)
-- **powershell**, **pwsh** (full auto-activation)
-- **cmd**, **batch**, **bat** (prints command for manual activation)
-- **nushell**, **nu** (prints command for manual activation)
-- **csh**, **tcsh**, **cshell** (prints command for manual activation)
+- **bash** (full auto-activation and deactivation)
+- **zsh** (full auto-activation and deactivation)
+- **sh** (full auto-activation and deactivation)
+- **fish** (full auto-activation and deactivation)
+- **powershell**, **pwsh** (full auto-activation, manual deactivation)
+- **cmd**, **batch**, **bat** (prints command for manual activation and deactivation)
+- **nushell**, **nu** (prints command for manual activation and deactivation)
+- **csh**, **tcsh**, **cshell** (prints command for manual activation and deactivation)
 
 For detailed shell support and limitations, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
