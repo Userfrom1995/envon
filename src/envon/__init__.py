@@ -1,3 +1,5 @@
+from .envon import main
+
 __all__ = ["main"]
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
