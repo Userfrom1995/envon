@@ -479,11 +479,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def emit_bootstrap(shell: str) -> str:
     """Generate the bootstrap function for the given shell by reading from dedicated files."""
     shell = shell.lower()
-    bootstrap_dir = Path(__file__).parent  # Directory of envon.py
-
+    
+    # Try package directory first, then system datadir
+    bootstrap_dir = Path(__file__).parent
+    system_datadir = Path("/usr/share/envon")
+    
     file_map = {
         "bash": "bootstrap_bash.sh",
-        "zsh": "bootstrap_bash.sh",  # zsh reuses bash
+        "zsh": "bootstrap_bash.sh",
         "sh": "bootstrap_sh.sh",
         "fish": "bootstrap_fish.fish",
         "nushell": "bootstrap_nushell.nu",
@@ -498,7 +501,13 @@ def emit_bootstrap(shell: str) -> str:
     if shell not in file_map:
         raise EnvonError(f"Unsupported shell: {shell}")
 
-    bootstrap_file = bootstrap_dir / file_map[shell]
+    filename = file_map[shell]
+    bootstrap_file = bootstrap_dir / filename
+    
+    # Fall back to system datadir if not found in package dir
+    if not bootstrap_file.exists():
+        bootstrap_file = system_datadir / filename
+    
     if not bootstrap_file.exists():
         raise EnvonError(f"Bootstrap file missing: {bootstrap_file}")
 

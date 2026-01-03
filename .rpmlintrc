@@ -1,0 +1,7 @@
+# Suppress spelling errors for legitimate shell names that rpmlint doesn't recognize
+addFilter("spelling-error.*zsh")
+addFilter("spelling-error.*powershell")
+addFilter("spelling-error.*pwsh")
+addFilter("spelling-error.*nushell")
+addFilter("spelling-error.*cmd")
+addFilter("spelling-error.*csh")
