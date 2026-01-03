@@ -33,21 +33,6 @@ envon = "envon.envon:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/envon"]
 
-# Ensure non-Python bootstrap files and all Python files are included
-[tool.hatch.build]
-include = [
-  "src/envon/__init__.py",
-  "src/envon/__main__.py",
-  "src/envon/envon.py",
-  "src/envon/bootstrap_*.sh",
-  "src/envon/bootstrap_*.fish",
-  "src/envon/bootstrap_*.ps1",
-  "src/envon/bootstrap_csh.csh",
-  "src/envon/bootstrap_*.nu",
-  "README.md",
-  "LICENSE",
-]
-
 [tool.hatch.build.targets.sdist]
 include = [
   "src/envon/**",
