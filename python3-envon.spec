@@ -1,25 +1,17 @@
 %global srcname envon
 
 Name:           python3-%{srcname}
-Version:        0.1.3
+Version:        0.1.4
 Release:        1%{?dist}
-Summary:        Emit the activation command for the nearest Python virtual environment
+Summary:        Cross-shell Python virtual environment activator
 
 License:        MIT
-URL:            https://github.com/userfrom1995/%{srcname}
-# Source tarball built from git using: python3 -m build --sdist
-# Upstream PyPI: https://pypi.org/project/envon/
-# Source:        https://files.pythonhosted.org/packages/source/e/%{srcname}/%{srcname}-%{version}.tar.gz
-Source0:        %{srcname}-%{version}.tar.gz
+URL:            https://github.com/Userfrom1995/%{srcname}
+Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-BuildRequires:  python3-build
-BuildRequires:  python3-hatchling
-BuildRequires:  python3-installer
-
-Requires:       python3-virtualenv >= 20
+BuildRequires:  pyproject-rpm-macros
 
 %description
 envon is a cross-shell Python virtual environment activator that emits
@@ -27,36 +19,64 @@ the correct activation command for your shell. It auto-detects the
 nearest or specified virtual environment and supports bash, zsh, sh,
 fish, powershell, pwsh, nushell, cmd, and csh/tcsh/cshell.
 
+It simplifies virtual environment activation across different shells
+and provides a unified interface for discovering and activating
+Python virtual environments in your projects.
+
 %prep
 %autosetup -n %{srcname}-%{version}
 
+%generate_buildrequires
+%pyproject_buildrequires
+
 %build
-python3 -m build --wheel --no-isolation
+%pyproject_wheel
 
 %install
-python3 -m installer --destdir=%{buildroot} dist/*.whl
+%pyproject_install
+%pyproject_save_files %{srcname}
 
-# Create directories for shell bootstrap files
-mkdir -p %{buildroot}%{_datadir}/%{srcname}
+# Install shell bootstrap files to datadir
+install -d -m 0755 %{buildroot}%{_datadir}/%{srcname}
+install -p -m 0644 src/%{srcname}/bootstrap_bash.sh %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_sh.sh %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_fish.fish %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_powershell.ps1 %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_csh.csh %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_csh_fixed.csh %{buildroot}%{_datadir}/%{srcname}/
+install -p -m 0644 src/%{srcname}/bootstrap_nushell.nu %{buildroot}%{_datadir}/%{srcname}/
 
-# Install bootstrap files
-cp -r src/%{srcname}/bootstrap_*.sh %{buildroot}%{_datadir}/%{srcname}/
-cp -r src/%{srcname}/bootstrap_*.fish %{buildroot}%{_datadir}/%{srcname}/
-cp -r src/%{srcname}/bootstrap_*.ps1 %{buildroot}%{_datadir}/%{srcname}/
-cp -r src/%{srcname}/bootstrap_*.csh %{buildroot}%{_datadir}/%{srcname}/
-cp -r src/%{srcname}/bootstrap_*.nu %{buildroot}%{_datadir}/%{srcname}/
+# Install man page
+install -d -m 0755 %{buildroot}%{_mandir}/man1
+install -p -m 0644 docs/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/
 
-%files -n python3-%{srcname}
+%check
+%pyproject_check_import
+
+%files -n python3-%{srcname} -f %{pyproject_files}
 %license LICENSE
 %doc README.md docs/
-%{python3_sitelib}/%{srcname}-%{version}.dist-info/
-%{python3_sitelib}/%{srcname}/
 %{_bindir}/%{srcname}
 %{_datadir}/%{srcname}/
+%{_mandir}/man1/%{srcname}.1*
 
 %changelog
-* Sun Nov 23 2025 User1995 <userfrom1995@gmail.com> - 0.1.3-1
-- Update to include documentation files in source tarball
+* Sat Jan 03 2026 User1995 <userfrom1995@gmail.com> - 0.1.4-1
+- Update to version 0.1.4
+- Add comprehensive man page for envon command
+- Clarify activation usage in documentation
+- Improve VIRTUAL_ENV fallback behavior documentation
 
-* Tue Nov 18 2025 User1995 <userfrom1995@gmail.com> - 0.1.1-1
+* Sat Jan 03 2026 User1995 <userfrom1995@gmail.com> - 0.1.3-1
+- Update to version 0.1.3
+- Use GitHub release tarball as Source0 (fixes MD5sum check errors)
+- Comply with Fedora Python Packaging Guidelines
+- Use pyproject-rpm-macros for modern Python packaging
+- Remove explicit Requires - use automatic dependency generator
+- Add %%check section with %%pyproject_check_import
+- Use install command with proper permissions for bootstrap files
+- Fix URL capitalization
+- Add man page for envon command
+
+* Mon Nov 18 2024 User1995 <userfrom1995@gmail.com> - 0.1.1-1
 - Initial package

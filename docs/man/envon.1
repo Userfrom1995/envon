@@ -1,0 +1,191 @@
+.TH ENVON 1 "January 2026" "envon 0.1.4" "User Commands"
+.SH NAME
+envon \- Cross-shell Python virtual environment activator
+.SH SYNOPSIS
+.B envon
+[\fItarget\fR]
+[\fB\-\-emit\fR [\fISHELL\fR]]
+[\fB\-\-print\-path\fR]
+[\fB\-\-install\fR [\fISHELL\fR]]
+[\fB\-d\fR|\fB\-\-deactivate\fR [\fISHELL\fR]]
+[\fB\-h\fR|\fB\-\-help\fR]
+.SH DESCRIPTION
+.B envon
+is a cross-shell Python virtual environment activator that emits the correct
+activation command for your shell. It auto-detects the nearest or specified
+virtual environment and supports multiple shells including bash, zsh, sh, fish,
+powershell, pwsh, nushell, cmd, and csh/tcsh/cshell.
+.PP
+It simplifies virtual environment activation across different shells and provides
+a unified interface for discovering and activating Python virtual environments
+in your projects.
+.SH OPTIONS
+.TP
+.I target
+Optional path to virtual environment directory, project root containing virtual
+environments, or virtual environment name (searched in WORKON_HOME).
+.TP
+.BR \-\-emit " [" \fISHELL\fR ]
+Emit activation command for the specified shell. If \fISHELL\fR is omitted,
+auto-detects the current shell. Supported shells: bash, zsh, sh, fish, cshell,
+nushell, powershell, pwsh, cmd.
+.TP
+.B \-\-print\-path
+Print only the resolved virtual environment path and exit.
+.TP
+.BR \-\-install " [" \fISHELL\fR ]
+Install envon bootstrap function directly to shell configuration file. If
+\fISHELL\fR is omitted, auto-detects the current shell.
+.TP
+.BR \-d ", " \-\-deactivate " [" \fISHELL\fR ]
+Emit deactivation command for the specified shell. If \fISHELL\fR is omitted,
+auto-detects the current shell.
+.TP
+.BR \-h ", " \-\-help
+Show help message and exit.
+.SH VIRTUAL ENVIRONMENT SEARCH
+When no target is provided,
+.B envon
+searches for virtual environments in the following order:
+.IP 1. 4
+.B Current directory:
+Looks for preferred names (.venv, venv, env, .env) and any other virtual
+environment subdirectories.
+.IP 2. 4
+.B Parent directories:
+Walks upward checking each parent directory for preferred names only.
+.IP 3. 4
+.B Active environment:
+Uses VIRTUAL_ENV environment variable if set and valid.
+.IP 4. 4
+.B Error:
+Reports an error if no virtual environment is found.
+.PP
+When multiple virtual environments are found at the same level, prompts for
+interactive selection.
+.SH SHELL SUPPORT
+.TP
+.BR bash ", " zsh ", " sh
+Full auto-activation and deactivation support.
+.TP
+.B fish
+Full auto-activation and deactivation support.
+.TP
+.BR powershell ", " pwsh
+Full auto-activation, manual deactivation. Manual profile edit may be required on Windows.
+.TP
+.BR nushell ", " nu
+Prints commands for manual activation and deactivation.
+.TP
+.BR cmd ", " batch ", " bat
+Prints commands for manual activation and deactivation.
+.TP
+.BR csh ", " tcsh ", " cshell
+Prints commands for manual activation and deactivation.
+.SH EXAMPLES
+.TP
+.B envon
+Activate nearest virtual environment with auto-detected shell.
+.TP
+.B envon myenv
+Activate virtual environment named "myenv" from WORKON_HOME.
+.TP
+.B envon /path/to/venv
+Activate virtual environment at specific path.
+.TP
+.B envon \-\-emit fish
+Emit Fish shell activation command for nearest virtual environment.
+.TP
+.B envon myenv \-\-emit bash
+Emit Bash activation command for "myenv" virtual environment.
+.TP
+.B envon \-\-print\-path
+Print the path of the nearest virtual environment.
+.TP
+.B envon \-\-install
+Install envon bootstrap function for auto-detected shell.
+.TP
+.B envon \-\-install zsh
+Install envon bootstrap function for Zsh shell.
+.TP
+.B envon \-d
+Emit deactivation command for auto-detected shell.
+.TP
+.B envon \-\-deactivate bash
+Emit deactivation command for Bash shell.
+.SH ACTIVATION USAGE
+There are two methods to use envon:
+.PP
+.B Method 1: With Bootstrap (Recommended)
+.PP
+First, install the bootstrap function once:
+.RS
+envon \-\-install
+.RE
+.PP
+Then simply run:
+.RS
+envon
+.RE
+.PP
+The bootstrap function automatically handles activation. No additional commands needed.
+.PP
+.B Method 2: Manual (Without Bootstrap)
+.PP
+If you have not installed the bootstrap, you must manually evaluate the output:
+.PP
+.B For bash/zsh/sh:
+.RS
+eval "$(envon)"
+.RE
+.PP
+.B For fish:
+.RS
+envon | source
+.RE
+.PP
+.B For PowerShell:
+.RS
+envon | Invoke\-Expression
+.RE
+.PP
+.B For cmd:
+.RS
+for /f "delims=" %i in ('envon') do %i
+.RE
+.SH ENVIRONMENT VARIABLES
+.TP
+.B VIRTUAL_ENV
+If set and pointing to a valid virtual environment, used as a fallback when
+no virtual environment is found through directory search.
+.TP
+.B WORKON_HOME
+Directory containing named virtual environments. Used when target is a name
+rather than a path.
+.SH FILES
+.TP
+.I /usr/share/envon/
+System directory containing shell bootstrap scripts.
+.TP
+.I ~/.bashrc, ~/.zshrc, ~/.config/fish/config.fish, etc.
+Shell configuration files where bootstrap functions are installed.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+General error (e.g., invalid arguments, shell detection failed).
+.TP
+.B 2
+Virtual environment not found or invalid.
+.SH AUTHOR
+User1995 <userfrom1995@gmail.com>
+.SH LICENSE
+MIT License. See /usr/share/licenses/python3-envon/LICENSE for details.
+.SH SEE ALSO
+.BR virtualenv (1),
+.BR python3 (1),
+.BR activate (1)
+.PP
+Full documentation: <https://github.com/Userfrom1995/envon>

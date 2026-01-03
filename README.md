@@ -64,8 +64,8 @@ Let's make envon the best Python venv activator for every shell!
 
 ## Release Notes
 
-**Version 0.1.1 (First Release)**  
-This is the initial release of envon. A lot of work is still ongoing, especially in the testing, CI, and adding support for missing shells (e.g., full auto-activation for Nushell and csh/tcsh).  
+**Version 0.1.4**  
+This is one of the initial releases of envon. A lot of work is still ongoing, especially in the testing, CI, and adding support for missing shells (e.g., full auto-activation for Nushell and csh/tcsh).  
 
 If you see any issues, feel free to [open an issue](https://github.com/userfrom1995/envon/issues). If you're interested in contributing, feel free to submit a PR. If you have ideas or anything regarding the project, feel free to open a discussion or feature request in an issue.  
 

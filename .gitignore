@@ -1,0 +1,11 @@
+review-python3-envon
+*.rpm
+*.tar.gz
+dist/
+.spec*
+batman/
+.idea/
+v0*
+src/__pycache__/
+
+
