@@ -39,4 +39,5 @@ include = [
   "docs/**",
   "README.md",
   "LICENSE",
+  ".rpmlintrc",
 ]

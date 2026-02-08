@@ -5,3 +5,6 @@ addFilter("spelling-error.*pwsh")
 addFilter("spelling-error.*nushell")
 addFilter("spelling-error.*cmd")
 addFilter("spelling-error.*csh")
++addFilter("spelling-error.*tcsh")
++addFilter("spelling-error.*cshell")
+

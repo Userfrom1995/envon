@@ -150,6 +150,7 @@ def _choose_interactively(candidates: list[Path], context: str) -> Path:
 
 def resolve_target(target: str | None) -> Path:
     if not target:
+
         # First, prefer venvs directly in the current directory; if multiple, ask.
         cwd = Path.cwd()
         in_here = _list_venvs_in_dir(cwd)
@@ -164,6 +165,17 @@ def resolve_target(target: str | None) -> Path:
             ve = os.environ.get("VIRTUAL_ENV")
             if ve and is_venv_dir(Path(ve)):
                 return Path(ve)
+
+            # Final fallback: If WORKON_HOME is set, list available environments there
+            # This allows finding global environments when no local or active one exists.
+            workon = os.environ.get("WORKON_HOME")
+            if workon and Path(workon).is_dir():
+                workon_venvs = _list_venvs_in_dir(Path(workon))
+                if len(workon_venvs) == 1:
+                    return workon_venvs[0]
+                if len(workon_venvs) > 1:
+                     return _choose_interactively(workon_venvs, f"WORKON_HOME ({workon})")
+            
             raise EnvonError("No virtual environment found here. Create one (e.g., '.venv') or pass a path.")
         return venv
 
@@ -177,7 +189,8 @@ def resolve_target(target: str | None) -> Path:
             return multiple[0]
         if len(multiple) > 1:
             return _choose_interactively(multiple, str(p))
-        raise EnvonError(f"Path does not appear to contain a virtual environment: {p}")
+        # If path exists but isn't a venv/container, fall through to WORKON_HOME check
+        # instead of failing immediately.
 
     # Fallback: WORKON_HOME name
     workon = os.environ.get("WORKON_HOME")
@@ -185,6 +198,11 @@ def resolve_target(target: str | None) -> Path:
         cand = Path(workon) / target
         if is_venv_dir(cand):
             return cand
+    
+    # If we found a local path but it wasn't valid, and WORKON_HOME failed too:
+    if p.exists():
+         raise EnvonError(f"Path does not appear to contain a virtual environment: {p}")
+
     raise EnvonError(f"Cannot resolve virtual environment from argument: {target}")
 
 

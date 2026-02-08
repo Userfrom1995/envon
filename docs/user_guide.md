@@ -70,30 +70,32 @@ envon myenv --emit fish --print-path
 envon --print-path --emit powershell
 ```
 
-## Argument Support for --emit and --print-path
+## Target Resolution Logic
 
-Both `--emit` and `--print-path` support an optional positional argument for the virtual environment name or path. If provided, they resolve the venv from that argument; if omitted, they use the default search logic.
+The optional `target` argument (e.g., `envon myenv` or `envon /path/to/project`) works with all commands.
 
-### With a Virtual Environment Argument
+### With a Target Argument
 - **Behavior:** Resolves the venv from the provided name or path.
 - **Search Logic:**
-  - If the argument is an existing directory and is a valid venv, use it directly.
-  - If the argument is an existing directory but not a venv, scan its subdirectories for venvs (preferred names first, then any valid venv subdirs).
-  - If the argument is not an existing path (i.e., a name), check the `WORKON_HOME` environment variable for a venv with that name.
-  - If multiple venvs are found in a directory, prompt for selection (if interactive).
-  - No upward walking to parent directories.
+  1. **Direct Path:** If the argument is an existing directory and is a valid venv, use it directly.
+  2. **Container Directory:** If the argument is an existing directory but *not* a venv, scan its subdirectories for venvs.
+     - Checks for preferred names (`.venv`, `venv`, `env`, `.env`) first, then any other venv-like subdirectories.
+     - **Interactive Selection:** If multiple venvs are found in the directory, prompts the user to choose one.
+  3. **WORKON_HOME Fallback:** If local resolution fails (either the path doesn't exist, or it exists but contains no venvs), check the `WORKON_HOME` environment variable for a venv with that name.
+  - **No Upward Search:** Does not walk up parent directories when a target is specified.
 - **Examples:**
-  - `envon myenv --emit bash`: If "myenv" exists as a venv in WORKON_HOME or as a directory with venvs, use it.
-  - `envon /path/to/venv --print-path`: If `/path/to/venv` is a valid venv, print its path.
+  - `envon myenv`: Checks `./myenv` (as venv or container), then `$WORKON_HOME/myenv`.
+  - `envon /path/to/project`: Checks `/path/to/project` for venvs (e.g., `/path/to/project/.venv`).
 
-### Without a Virtual Environment Argument (Default)
+### Without a Target Argument (Default)
 - **Behavior:** Uses full auto-detection: current directory, then up parent directories, then VIRTUAL_ENV.
 - **Search Logic:**
   - Scan the current directory for venvs (preferred names first, then any subdirectories).
   - If multiple, prompt for selection.
   - If none, walk up parent directories checking preferred names.
   - If still none, check if `VIRTUAL_ENV` is set and points to a valid venv.
-  - If all fail, error out.
+  - **WORKON_HOME Fallback:** If all else fails and `WORKON_HOME` is set, list all available environments in `WORKON_HOME` and prompt for selection.
+  - If that fails too, error out.
 - **Examples:**
   - `envon --emit fish`: Auto-detects venv and emits Fish activation.
   - `envon --print-path`: Prints the path of the auto-detected venv.

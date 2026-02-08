@@ -51,7 +51,7 @@ install -d -m 0755 %{buildroot}%{_mandir}/man1
 install -p -m 0644 docs/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/
 
 %check
-%pyproject_check_import
+%pyproject_check_import %{srcname}
 
 %files -n python3-%{srcname} -f %{pyproject_files}
 %license LICENSE
