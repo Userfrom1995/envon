@@ -1,7 +1,7 @@
 %global srcname envon
 
 Name:           python3-%{srcname}
-Version:        0.1.4
+Version:        0.1.5
 Release:        1%{?dist}
 Summary:        Cross-shell Python virtual environment activator
 
@@ -61,6 +61,13 @@ install -p -m 0644 docs/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/%{srcname}.1*
 
 %changelog
+* Mon Feb 09 2026 User1995 <userfrom1995@gmail.com> - 0.1.5-1
+- Update to version 0.1.5
+- Improve venv resolution logic (active venv > WORKON_HOME)
+- Add WORKON_HOME fallback for default command
+- Auto-select single environment in WORKON_HOME
+- Fix WORKON_HOME shadowing issues
+
 * Sat Jan 03 2026 User1995 <userfrom1995@gmail.com> - 0.1.4-1
 - Update to version 0.1.4
 - Add comprehensive man page for envon command

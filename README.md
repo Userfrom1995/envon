@@ -64,6 +64,12 @@ Let's make envon the best Python venv activator for every shell!
 
 ## Release Notes
 
+**Version 0.1.5**
+- Improved venv resolution logic: defaults to active venv if present before falling back to WORKON_HOME.
+- Added WORKON_HOME fallback for default `envon` command (no arguments).
+- Auto-selection of single environment in WORKON_HOME.
+- Fixed shadowing issues where WORKON_HOME could override active environments.
+
 **Version 0.1.4**  
 This is one of the initial releases of envon. A lot of work is still ongoing, especially in the testing, CI, and adding support for missing shells (e.g., full auto-activation for Nushell and csh/tcsh).  
 
