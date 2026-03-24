@@ -65,6 +65,12 @@ Let's make envon the best Python venv activator for every shell!
 
 ## Release Notes
 
+**Version 0.1.6**
+- Added support for MSYS2 and Git Bash on Windows (home directory and path resolution).
+- Resolved interactive selection crashes in Mintty-based terminals (Git Bash/MSYS2).
+- Fixed Zsh command substitution capturing hidden carriage returns in MSYS2.
+- Improved shell detection and activation for all supported shells via explicit `--emit` flag in bootstrap wrappers.
+
 **Version 0.1.5**
 - Improved venv resolution logic: defaults to active venv if present before falling back to WORKON_HOME.
 - Added WORKON_HOME fallback for default `envon` command (no arguments).
