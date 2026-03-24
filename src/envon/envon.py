@@ -9,6 +9,12 @@ from pathlib import Path
 import stat
 
 try:
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("envon")
+except Exception:
+    __version__ = "unknown"
+
+try:
     from virtualenv.run.plugin.base import PluginLoader
 except ImportError:
     # Fallback if plugin system not available
@@ -30,15 +36,33 @@ def _is_posix_layer_on_windows() -> bool:
     """Detect MSYS2, Git Bash, or Cygwin POSIX layers on Windows.
 
     MSYS2 and Git Bash set the MSYSTEM environment variable
-    (e.g. MINGW64, UCRT64, MSYS, CLANG64).  When present we
-    treat the session as POSIX-like and skip Windows-specific
-    restrictions in shell detection and bootstrap installation.
+    (e.g. MINGW64, UCRT64, MSYS, CLANG64).  Cygwin exports PWD
+    starting with '/' and often sets TERM_PROGRAM=mintty.
+    When present we treat the session as POSIX-like and skip
+    Windows-specific restrictions in shell detection and
+    bootstrap installation.
     """
     if os.name != "nt":
         return False
     if os.environ.get("MSYSTEM"):  # MSYS2 / Git Bash
         return True
+    if os.environ.get("PWD", "").startswith("/"): # Cygwin, MSYS2
+        return True
+    if os.environ.get("TERM_PROGRAM") == "mintty": # Cygwin, MSYS2 fallback
+        return True
     return False
+
+
+def _get_home_dir() -> Path:
+    """Return the user's home directory, respecting MSYS2/Cygwin $HOME.
+    
+    Python natively resolves Path.home() to USERPROFILE on Windows,
+    but MSYS2/Cygwin have their own isolated home directories stored
+    in the HOME environment variable.
+    """
+    if os.name == "nt" and _is_posix_layer_on_windows() and "HOME" in os.environ:
+        return Path(os.environ["HOME"])
+    return Path.home()
 
 
 def is_venv_dir(path: Path) -> bool:
@@ -116,15 +140,16 @@ def _list_venvs_in_dir(root: Path) -> list[Path]:
     for name in PREFERRED_NAMES:
         cand = root / name
         if is_venv_dir(cand):
-            found.append(cand)
-            seen.add(cand)
+            resolved = cand.resolve()
+            found.append(resolved)
+            seen.add(resolved)
     # Scan all subdirectories
     try:
         for child in sorted([p for p in root.iterdir() if p.is_dir()]):
-            if child in seen:
+            if child.resolve() in seen:
                 continue
             if is_venv_dir(child):
-                found.append(child)
+                found.append(child.resolve())
     except FileNotFoundError:
         pass
     return found
@@ -135,11 +160,6 @@ def _choose_interactively(candidates: list[Path], context: str) -> Path:
 
     If stdin is not a TTY, print options and raise EnvonError.
     """
-    if not sys.stdin.isatty():
-        lines = "\n".join(f"  {i + 1}) {p}" for i, p in enumerate(candidates))
-        raise EnvonError(
-            f"Multiple virtual environments found in {context}. Choose one by passing a path or name:\n{lines}"
-        )
     print(f"Multiple virtual environments found in {context}:", file=sys.stderr)
     for i, p in enumerate(candidates, 1):
         print(f"  {i}) {p}", file=sys.stderr)
@@ -150,9 +170,9 @@ def _choose_interactively(candidates: list[Path], context: str) -> Path:
         try:
             sel = sys.stdin.readline()
         except Exception:
-            raise EnvonError("Aborted.")
+            raise EnvonError("\nAborted.")
         if not sel:
-            raise EnvonError("Aborted.")
+            raise EnvonError("\nAborted. Not an interactive terminal.")
         sel = sel.strip()
         if not sel:
             continue
@@ -470,6 +490,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         prog="envon",
         description="Emit the activation command for the nearest or specified virtual environment.",
     )
+    p.add_argument(
+        "-V", "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
     p.add_argument("target", nargs="?", help="Path, project root, or name (searched in WORKON_HOME)")
     p.add_argument(
         "--emit",
@@ -554,7 +579,7 @@ def emit_bootstrap(shell: str) -> str:
 def get_shell_config_path(shell: str) -> Path:
     """Get the configuration file path for a given shell."""
     shell = shell.lower()
-    home = Path.home()
+    home = _get_home_dir()
 
     if shell == "bash":
         # Try .bashrc first, fall back to .bash_profile
@@ -701,10 +726,10 @@ def get_managed_bootstrap_path(shell: str) -> Path:
     """Return the managed bootstrap file path for a shell."""
     shell = shell.lower()
     # Determine config base dir
-    if os.name == "nt":
+    if os.name == "nt" and not _is_posix_layer_on_windows():
         base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
     else:
-        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+        base = Path(os.environ.get("XDG_CONFIG_HOME", _get_home_dir() / ".config"))
     envon_dir = base / "envon"
 
     name = (
@@ -743,20 +768,21 @@ def get_managed_bootstrap_path(shell: str) -> Path:
 def _write_managed_if_changed(path: Path, content: str) -> None:
     """Write content to path if missing or different."""
     try:
-        if path.exists() and path.read_text() == content:
+        if path.exists() and path.read_text(encoding="utf-8") == content:
             return
     except Exception:
         # If read fails, attempt to overwrite
         pass
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(content, encoding="utf-8")
+    with tmp.open("w", encoding="utf-8", newline="\n") as f:
+        f.write(content)
     tmp.replace(path)
 
 
 def _ensure_rc_sources_managed(config_path: Path, managed_file: Path, shell: str) -> None:
     """Ensure the user's RC/profile sources the managed file, using idempotent markers."""
     rc_exists = config_path.exists() and config_path.is_file()
-    rc_text = config_path.read_text(encoding="utf-8") if rc_exists else ""
+    rc_text = config_path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n") if rc_exists else ""
 
     # If already installed with markers, do nothing
     if MARK_START in rc_text and MARK_END in rc_text:
@@ -785,25 +811,27 @@ def _ensure_rc_sources_managed(config_path: Path, managed_file: Path, shell: str
     else:
         raise EnvonError(f"Unsupported shell: {shell}")
 
-    # Write or append the block with a robust fallback for Windows I/O quirks
+    # For POSIX shells on Windows, forcefully rewrite the whole file to cure legacy CR pollution
+    force_rewrite = (shell in {"bash", "zsh", "sh", "fish", "csh", "tcsh", "cshell"} and os.name == "nt")
     try:
-        # Try to clear read-only flag if present
         if rc_exists:
             try:
                 os.chmod(config_path, stat.S_IWRITE | stat.S_IREAD)
             except Exception:
                 pass
-        if not rc_exists:
-            # Create new profile file with our block
-            config_path.write_text(block, encoding="utf-8")
+        
+        if not rc_exists or force_rewrite:
+            combined = (rc_text + block) if rc_text else block
+            with config_path.open("w", encoding="utf-8", newline="\n") as f:
+                f.write(combined)
         else:
-            with config_path.open("a", encoding="utf-8") as f:
+            with config_path.open("a", encoding="utf-8", newline="\n") as f:
                 f.write(block)
     except OSError as e:
-        # Fallback: write the full combined content (existing + block)
         combined = rc_text + block
         try:
-            config_path.write_text(combined, encoding="utf-8")
+            with config_path.open("w", encoding="utf-8", newline="\n") as f:
+                f.write(combined)
         except Exception as e2:
             # On PowerShell, also try the alternate profile file name
             if shell in {"powershell", "pwsh"}:
@@ -831,7 +859,8 @@ def _ensure_rc_sources_managed(config_path: Path, managed_file: Path, shell: str
                             return
                         # Otherwise write combined content to alternate profile
                         alt_combined = alt_text + block if alt_text else block
-                        alt_path.write_text(alt_combined, encoding="utf-8")
+                        with alt_path.open("w", encoding="utf-8", newline="\n") as f:
+                            f.write(alt_combined)
                         return
                     except Exception as e3:
                         raise EnvonError(
@@ -890,6 +919,20 @@ def _maybe_update_managed_current_shell(explicit_shell: str | None) -> None:
         pass
 
 
+def _print_stdout(text: str) -> None:
+    """Print to stdout forcefully using raw bytes to prevent Windows CR injection.
+    
+    When Python's `print()` is run natively on Windows, it outputs `\\r\\n`.
+    POSIX shells like MSYS2 Zsh, Cygwin Bash, etc. capture stdout via $()
+    and will often trip over the trailing `\\r` when evaluating commands natively.
+    """
+    try:
+        sys.stdout.buffer.write((text + "\n").encode("utf-8"))
+        sys.stdout.buffer.flush()
+    except Exception:
+        print(text)
+
+
 def main(argv: list[str] | None = None) -> int:
     ns = parse_args(argv or sys.argv[1:])
     try:
@@ -897,20 +940,20 @@ def main(argv: list[str] | None = None) -> int:
         _maybe_update_managed_current_shell(None)
         if ns.install is not None:
             result = install_bootstrap(ns.install)
-            print(result)
+            _print_stdout(result)
             return 0
         if ns.deactivate is not None:
             shell = detect_shell(ns.deactivate)
             cmd = emit_deactivation(shell)
-            print(cmd)
+            _print_stdout(cmd)
             return 0
         venv = resolve_target(ns.target)
         if ns.print_path:
-            print(str(venv))
+            _print_stdout(str(venv))
             return 0
         shell = detect_shell(ns.emit)
         cmd = emit_activation(venv, shell)
-        print(cmd)
+        _print_stdout(cmd)
         return 0
     except EnvonError as e:
         print(str(e), file=sys.stderr)

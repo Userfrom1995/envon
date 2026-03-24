@@ -4,11 +4,11 @@ function envon {
   if (-not $envonExe) { Write-Error 'envon console script not found on PATH'; return }
   if ($Args.Count -gt 0) {
     if ($Args[0] -eq '--') { $Args = $Args[1..($Args.Count-1)] }
-    elseif ($Args[0] -eq 'help' -or $Args[0] -eq '--help' -or $Args[0] -eq '--install' -or $Args[0].StartsWith('-')) {
+    elseif ($Args[0] -eq 'help' -or $Args[0] -eq '--help' -or $Args[0] -eq '--install' -or $Args[0] -eq '--version' -or $Args[0] -eq '-V' -or $Args[0].StartsWith('-')) {
       & $envonExe.Source @Args; return
     }
   }
-  $cmd = & $envonExe.Source @Args
+  $cmd = & $envonExe.Source --emit powershell @Args
   if ($LASTEXITCODE -ne 0) { Write-Error $cmd; return }
   Invoke-Expression $cmd
 }
