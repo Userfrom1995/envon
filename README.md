@@ -17,6 +17,7 @@ Emit the activation command for the nearest or specified Python virtual environm
 - **cmd**, **batch**, **bat** (prints command for manual activation and deactivation)
 - **nushell**, **nu** (prints command for manual activation and deactivation)
 - **csh**, **tcsh**, **cshell** (prints command for manual activation and deactivation)
+- **MSYS2 / Git Bash** — full POSIX shell support on Windows (see [docs/MSYS2.md](https://github.com/userfrom1995/envon/blob/main/docs/MSYS2.md))
 
 For detailed shell support and limitations, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 

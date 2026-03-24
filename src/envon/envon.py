@@ -26,6 +26,21 @@ class EnvonError(Exception):
     pass
 
 
+def _is_posix_layer_on_windows() -> bool:
+    """Detect MSYS2, Git Bash, or Cygwin POSIX layers on Windows.
+
+    MSYS2 and Git Bash set the MSYSTEM environment variable
+    (e.g. MINGW64, UCRT64, MSYS, CLANG64).  When present we
+    treat the session as POSIX-like and skip Windows-specific
+    restrictions in shell detection and bootstrap installation.
+    """
+    if os.name != "nt":
+        return False
+    if os.environ.get("MSYSTEM"):  # MSYS2 / Git Bash
+        return True
+    return False
+
+
 def is_venv_dir(path: Path) -> bool:
     """Return True if the given path looks like a Python virtual environment directory."""
     if not path or not path.is_dir():
@@ -211,7 +226,7 @@ def detect_shell(explicit: str | None) -> str:
         return explicit.lower()
 
     # Heuristics by platform/env
-    if os.name == "nt":
+    if os.name == "nt" and not _is_posix_layer_on_windows():
         # Prefer PowerShell if available, else default to cmd
         if "PSModulePath" in os.environ:
             return "powershell"
@@ -283,10 +298,11 @@ def emit_activation(venv: Path, shell: str) -> str:
     """Generate activation command using virtualenv's activation plugin system."""
     shell = shell.lower()
 
-    # Nushell is not supported on Windows — refuse to emit activation for it
-    if os.name == "nt" and shell in {"nu", "nushell"}:
+    # Nushell is not supported on native Windows — refuse to emit activation for it
+    # (MSYS2 / Git Bash users get POSIX-like behavior, so we allow nushell there)
+    if os.name == "nt" and not _is_posix_layer_on_windows() and shell in {"nu", "nushell"}:
         raise EnvonError(
-            "Nushell activation is not supported on Windows. Use PowerShell (powershell/pwsh) or cmd."
+            "Nushell activation is not supported on native Windows. Use PowerShell (powershell/pwsh) or cmd."
         )
 
     # Map shell names to activator entry point names
@@ -600,10 +616,10 @@ def install_bootstrap(shell: str | None) -> str:
     # Windows-specific policy: do not modify any profile files automatically
     # - Nushell is not supported on Windows for installation
     # - For PowerShell, write the managed file and instruct the user to update their profile manually
-    if os.name == "nt":
+    if os.name == "nt" and not _is_posix_layer_on_windows():
         if shell in {"nushell", "nu"}:
             raise EnvonError(
-                "Nushell is not supported on Windows. Please use PowerShell (powershell/pwsh)."
+                "Nushell is not supported on native Windows. Please use PowerShell (powershell/pwsh)."
             )
 
         # Default to PowerShell on Windows installs
