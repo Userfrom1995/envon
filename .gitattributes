@@ -1,0 +1,14 @@
+# Enforce LF for all text files across all platforms
+* text=auto eol=lf
+
+# Explicitly ensure shell scripts and source code use LF
+*.sh text eol=lf
+*.fish text eol=lf
+*.nu text eol=lf
+*.py text eol=lf
+*.csh text eol=lf
+*.ps1 text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf

@@ -7,6 +7,7 @@
 - `--print-path`: Print only the resolved virtual environment path.
 - `--install [SHELL]`: Install envon bootstrap function. If omitted, auto-detects shell.
 - `-d`, `--deactivate [SHELL]`: Emit deactivation command for the specified shell. If omitted, auto-detects shell.
+- `-V`, `--version`: Print the current version of envon.
 - `-h`, `--help`: Show help.
 
 **Note:** When no target is provided, envon searches the current directory first, then walks up parent directories.

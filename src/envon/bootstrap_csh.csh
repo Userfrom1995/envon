@@ -13,7 +13,7 @@
 # set _ev=`~/.local/bin/envon $argv:q`
 # if ( $status == 0 && "$_ev" != "" ) then
 #     eval "$_ev"
-# endif'
+# endif' 
 
 # alias envon `if ( $#argv >= 1 ) then
 #     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then
@@ -99,4 +99,4 @@
 # if ( $status == 0 && "$_ev" != "" ) then
 #     eval "$_ev"
 # endif
-alias envon '~/.local/bin/envon \!*'
+alias envon '~/.local/bin/envon --emit csh \!*'

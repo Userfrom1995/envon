@@ -20,6 +20,11 @@ Emit the activation command for the nearest or specified Python virtual environm
 
 For detailed shell support and limitations, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
+## Supported Environments
+- **Linux/Unix/macOS**: Native support for all major shells.
+- **Windows (Native)**: PowerShell and CMD.
+- **Windows (POSIX Layers)**: Inside **MSYS2** and **Git Bash**, we support all the same shells that are supported on Linux, Unix, or macOS.
+
 ## Installation
 **Recommended:** Install with pipx for isolated environments:
 ```bash
@@ -46,7 +51,7 @@ envon
 ```
 This will activate the nearest virtual environment in your project.
 
-Supported flags: `--emit [SHELL]`, `--print-path`, `--install [SHELL]`.
+Supported flags: `-V`, `--version`, `--emit [SHELL]`, `--print-path`, `--install [SHELL]`.
 
 For advanced usage, examples, and all flags, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
@@ -63,6 +68,13 @@ For development setup, building, and project structure, see [docs/development.md
 Let's make envon the best Python venv activator for every shell!
 
 ## Release Notes
+
+**Version 0.1.6**
+- Added `-V` / `--version` flag to print the current version of `envon`.
+- Added robust support for **MSYS2** and **Git Bash** environments on Windows (now supporting all the same shells as on Linux, Unix, or macOS).
+- Resolved interactive selection crashes in Mintty-based terminals (Git Bash/MSYS2).
+- Fixed Zsh command substitution capturing hidden carriage returns in MSYS2.
+- Improved shell detection and activation for all supported shells via explicit `--emit` flag in bootstrap wrappers.
 
 **Version 0.1.5**
 - Improved venv resolution logic: defaults to active venv if present before falling back to WORKON_HOME.
