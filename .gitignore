@@ -7,5 +7,6 @@ batman/
 .idea/
 v0*
 src/__pycache__/
+.idea/
 
 
