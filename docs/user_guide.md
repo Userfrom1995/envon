@@ -30,11 +30,11 @@ When multiple venvs are found at the same level, prompts for interactive selecti
 | zsh           | Yes            | Yes          | Uses bash bootstrap                                |
 | sh            | Yes            | Yes          | Full support                                       |
 | fish          | Yes            | Yes          | Full support                                       |
+| csh, tcsh, cshell | Yes        | Yes          | Full support with auto-activation                  |
 | powershell    | Yes            | Manual       | Manual profile edit required on Windows            |
 | pwsh          | Yes            | Manual       | Same as powershell                                 |
-| nushell, nu   | Manual         | Manual       | Prints commands for manual activation/deactivation |
+| nushell, nu   | Yes            | Yes          | Full support with auto-activation                  |
 | cmd, batch, bat | Manual       | Manual       | Prints commands for manual activation/deactivation |
-| csh, tcsh, cshell | Manual     | Manual       | Prints commands for manual activation/deactivation |
 
 
 ## CLI Usage Patterns
@@ -116,6 +116,6 @@ envon --deactivate bash
 ```
 
 **Note:** Deactivation support varies by shell:
-- **bash, zsh, sh, fish**: Full auto-deactivation
+- **bash, zsh, sh, fish, csh/tcsh, nushell**: Full auto-deactivation
 - **powershell, pwsh**: Prints deactivation command for manual execution
-- **nushell, cmd, csh/tcsh**: Prints deactivation command for manual execution
+- **cmd**: Prints deactivation command for manual execution

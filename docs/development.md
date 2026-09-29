@@ -5,12 +5,12 @@
 - `src/envon/`: Main package code.
   - `envon.py`: Core logic for venv detection, activation, and CLI.
   - `__main__.py`: Entry point for `python -m envon`.
-  - `bootstrap_*.sh`, `bootstrap_*.fish`, etc.: Shell-specific bootstrap scripts.
+  - `bootstrap_*.sh`, `bootstrap_*.fish`, `bootstrap_*.nu`, `bootstrap_*.csh`, `bootstrap_*.ps1`: Shell-specific bootstrap scripts.
 - `docs/`: Documentation.
   - `installation.md`: Installation details.
   - `user_guide.md`: Usage and flags.
   - `development.md`: This file.
-- `tests/`: Unit tests (currently removed, to be re-added later).
+- `tests/`: Unit test suite.
 - `pyproject.toml`: Build configuration.
 - `README.md`: Main project description.
 
@@ -68,9 +68,7 @@ twine upload --repository testpypi dist/*
 
 ## Testing
 
-Tests are currently removed. To re-add, create `tests/test_envon.py` with unit tests for key functions.
-
-Run tests (once added):
+Run tests:
 ```bash
 python -m unittest discover tests/
 ```

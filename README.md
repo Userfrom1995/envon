@@ -13,10 +13,10 @@ Emit the activation command for the nearest or specified Python virtual environm
 - **zsh** (full auto-activation and deactivation)
 - **sh** (full auto-activation and deactivation)
 - **fish** (full auto-activation and deactivation)
+- **csh**, **tcsh**, **cshell** (full auto-activation and deactivation)
+- **nushell**, **nu** (full auto-activation and deactivation)
 - **powershell**, **pwsh** (full auto-activation, manual deactivation)
 - **cmd**, **batch**, **bat** (prints command for manual activation and deactivation)
-- **nushell**, **nu** (prints command for manual activation and deactivation)
-- **csh**, **tcsh**, **cshell** (prints command for manual activation and deactivation)
 
 For detailed shell support and limitations, see [docs/user_guide.md](https://github.com/userfrom1995/envon/blob/main/docs/user_guide.md).
 
@@ -61,13 +61,23 @@ For development setup, building, and project structure, see [docs/development.md
 ## Contributor Note
 
 **envon is in its early phase. Basic functionality is solid, but we welcome help!**
-- TCSH/cshell and Nushell support need improvement (auto-activation, overlays).
+- Nushell support needs improvement (auto-activation, overlays).
+- Additional shell support (ksh, xonsh, elvish) would be valuable additions.
 - If you find issues, please [raise an issue](https://github.com/userfrom1995/envon/issues).
 - If you'd like to contribute, fork and submit a PR—contributions are very welcome!
 
 Let's make envon the best Python venv activator for every shell!
 
 ## Release Notes
+
+**Version 0.2.0**
+- Full automatic activation and deactivation across all 7 major Unix shells (`bash`, `sh`, `zsh`, `fish`, `csh`, `tcsh`, `nushell`).
+- First-class Nushell support with unbuffered real-time interactive selection menu streaming and dynamic prompt customization (`(venv)` prefix).
+- Out-of-the-box support for stdlib `python -m venv` environments in Nushell without requiring third-party `virtualenv` or `activate.nu`.
+- Complete C-Shell (`csh`) and TC-Shell (`tcsh`) support with strict variable cleanup and zero environment leakage.
+- Added deactivation guards across all shell wrappers to prevent collisions with host/system deactivator scripts.
+- Hardened filesystem scanning against permission crashes (`PermissionError`/`OSError`) in restricted directories (such as `/tmp/systemd-private*`).
+- Resolved `--` command-line argument separator handling across all wrapper scripts.
 
 **Version 0.1.6**
 - Added `-V` / `--version` flag to print the current version of `envon`.

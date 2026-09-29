@@ -44,5 +44,5 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 This allows local scripts to run while maintaining security for remote scripts.
 
-### Nushell and csh/tcsh/cshell
-Auto-activation is not fully supported; you may need to run the printed command manually.
+### Windows CMD Note
+On Windows Command Prompt (cmd), `envon` prints commands for manual execution; use PowerShell or Nushell for automated environments.

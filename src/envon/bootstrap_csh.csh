@@ -1,102 +1,20 @@
-#!usr/bin/tcsh -f
-#! /bin/tcsh -f
-# envon wrapper script for tcsh compatibility
+# envon managed bootstrap for csh/tcsh.
+# This file is sourced by the shell rc (e.g. ~/.cshrc). It defines an
+# "envon" alias that evaluates the activation command returned by envon.
+#
+# Usage (after `envon --install csh`):
+#   source ~/.cshrc
+#
+# NOTE: The _envon_cmd variable must be set before sourcing this file.
+# envon --install does this automatically in the generated managed file.
 
-# Check if this is a help/install command
-# alias envon 'if ( $#argv >= 1 ) then
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then
-#         exec /usr/bin/envon $argv:q
-#     endif
-# endif
+# Fallback for testing the file standalone
+if (! $?_envon_cmd) then
+    set _envon_cmd = "\envon"
+endif
 
-# # For environment activation
-# set _ev=`~/.local/bin/envon $argv:q`
-# if ( $status == 0 && "$_ev" != "" ) then
-#     eval "$_ev"
-# endif' 
-
-# alias envon `if ( $#argv >= 1 ) then
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then
-#         exec /usr/bin/envon $argv:q
-#     endif
-# endif
-# set _ev=`~/.local/bin/envon $argv:q`
-# if ( $status == 0 && "$_ev" != "" ) then
-#     eval "$_ev"
-# endif`
-
-# alias envon 'if ( $#argv >= 1 ) then \
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then \
-#         ~/.local/bin/envon \!* \
-#     else \
-#         set _ev=`~/.local/bin/envon \!*` \
-#         if ( $status == 0 && "$_ev" != "" ) then \
-#             eval "$_ev" \
-#         endif \
-#         if ( $?_ev ) unset _ev \
-#     endif \
-# else \
-#     set _ev=`~/.local/bin/envon` \
-#     if ( $status == 0 && "$_ev" != "" ) then \
-#         eval "$_ev" \
-#     endif \
-#     if ( $?_ev ) unset _ev \
-# endif'
-# For tcsh, we need to avoid complex control structures in aliases
-# Instead, we'll use a very simple approach
-
-
-# alias envon 'set _cmd="\!*"; if ( "$_cmd" == "--help" || "$_cmd" == "-h" || "$_cmd" == "help" || "$_cmd" == "--install" ) ~/.local/bin/envon \!*; if ( "$_cmd" != "--help" && "$_cmd" != "-h" && "$_cmd" != "help" && "$_cmd" != "--install" ) set _result="`~/.local/bin/envon \!*`" && if ( $status == 0 ) eval "$_result"; unset _cmd; if ( $?_result ) unset _result'
-
-# alias envon 'if ( $#argv >= 1 ) then \
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then \
-#         exec /.local/bin/envon $argv:q \
-#     endif \
-# endif \
-# set _ev=`~/.local/bin/envon $argv:q` \
-# if ( $status == 0 && "$_ev" != "" ) then \
-#     eval "$_ev" \
-# endif'
-
-# alias envon `if ( $#argv >= 1 ) then
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then
-#         exec /usr/bin/envon $argv:q
-#     endif
-# endif
-# set _ev=`~/.local/bin/envon $argv:q`
-# if ( $status == 0 && "$_ev" != "" ) then
-#     eval "$_ev"
-# endif`
-
-# envon managed bootstrap - minimal fixes applied
-# Define a shell function for envon
-# alias envon 'envon_func \!*'
-
-# envon_func:
-#     if ( $#argv >= 1 ) then
-#         if ("$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install") then
-#             exec ~/.local/bin/envon $argv:q
-#         endif
-#     endif
-#     set _ev=`~/.local/bin/envon $argv:q`
-#     if ( $status == 0 && "$_ev" != "" ) then
-#         eval "$_ev"
-#     endif
-#     return
-
-#!/bin/tcsh -f
-# envon wrapper script for tcsh
-
-# Check if this is a help/install command
-# if ( $#argv >= 1 ) then
-#     if ( "$argv[1]" == "help" || "$argv[1]" == "-h" || "$argv[1]" == "--help" || "$argv[1]" == "--install" ) then
-#         exec ~/.local/bin/envon $argv:q
-#     endif
-# endif
-
-# # For environment activation
-# set _ev=`~/.local/bin/envon $argv:q`
-# if ( $status == 0 && "$_ev" != "" ) then
-#     eval "$_ev"
-# endif
-alias envon '~/.local/bin/envon --emit csh \!*'
+# Main alias:
+# Extract first argument safely via sentinel array idiom to prevent subscript out of range.
+# Non-activation commands (flags other than -d/--deactivate, or help) are executed directly.
+# Activation/deactivation commands are evaluated in the current shell context.
+alias envon 'set _envon_args = ( \!* "" ); if ( "$_envon_args[1]" == "--" ) set _envon_args = ( $_envon_args[2-] "" ); set _envon_info = 0; set _envon_deact_err = 0; set _envon_out = ""; if ( ( "$_envon_args[1]" == "-d" || "$_envon_args[1]" == "--deactivate" ) && ! $?VIRTUAL_ENV ) set _envon_deact_err = 1; if ( $_envon_deact_err == 1 ) echo "No virtual environment is currently active." > /dev/stderr; if ( $_envon_deact_err == 1 ) set _envon_ec = 1; if ( "$_envon_args[1]" =~ -* && "$_envon_args[1]" != "-d" && "$_envon_args[1]" != "--deactivate" || "$_envon_args[1]" == "help" ) set _envon_info = 1; if ( $_envon_info == 1 ) "$_envon_cmd" \!*; if ( $_envon_info == 1 ) set _envon_ec = $status; if ( $_envon_info == 0 && $_envon_deact_err == 0 ) set _envon_out = `"$_envon_cmd" --emit csh \!*`; if ( $_envon_info == 0 && $_envon_deact_err == 0 ) set _envon_ec = $status; if ( $_envon_info == 0 && $_envon_deact_err == 0 && $_envon_ec == 0 && "$_envon_out" != "" ) eval "$_envon_out"; eval "unset _envon_args _envon_info _envon_deact_err _envon_out _envon_ec; (exit $_envon_ec)"'

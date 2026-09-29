@@ -20,11 +20,6 @@ except ImportError:
     # Fallback if plugin system not available
     PluginLoader = None
 
-try:  # version info for managed bootstrap tagging
-    from virtualenv.version import __version__ as VENV_VERSION
-except Exception:  # pragma: no cover - defensive fallback
-    VENV_VERSION = "unknown"
-
 PREFERRED_NAMES = (".venv", "venv", "env", ".env")
 
 
@@ -67,49 +62,52 @@ def _get_home_dir() -> Path:
 
 def is_venv_dir(path: Path) -> bool:
     """Return True if the given path looks like a Python virtual environment directory."""
-    if not path or not path.is_dir():
+    try:
+        if not path or not path.is_dir():
+            return False
+
+        # Check for pyvenv.cfg file - this is the most reliable indicator
+        if (path / "pyvenv.cfg").exists():
+            return True
+
+        # Try to use virtualenv's activation system to detect available scripts
+        if PluginLoader:
+            try:
+                activators = PluginLoader.entry_points_for("virtualenv.activate")
+                # Check if any activation scripts exist
+                for activator_name in ["bash", "batch", "powershell", "fish", "cshell", "nushell"]:
+                    if activator_name in activators:
+                        # Check common script locations based on platform
+                        if activator_name == "bash" and (path / "bin" / "activate").exists():
+                            return True
+                        if activator_name == "batch" and (path / "Scripts" / "activate.bat").exists():
+                            return True
+                        if activator_name == "powershell" and ((path / "Scripts" / "Activate.ps1").exists() or (path / "bin" / "Activate.ps1").exists()):
+                            return True
+                        if activator_name == "fish" and (path / "bin" / "activate.fish").exists():
+                            return True
+                        if activator_name == "cshell" and (path / "bin" / "activate.csh").exists():
+                            return True
+                        if activator_name == "nushell" and (path / "bin" / "activate.nu").exists():
+                            return True
+            except Exception:
+                # Fall back to hardcoded detection
+                pass
+
+        # Fallback: hardcoded detection for compatibility
+        # Windows layout
+        if (path / "Scripts" / "activate.bat").exists() or (path / "Scripts" / "Activate.ps1").exists():
+            return True
+        # POSIX layout
+        if (path / "bin" / "activate").exists():
+            return True
+        # Other shells
+        if (path / "bin" / "activate.fish").exists() or (path / "bin" / "activate.csh").exists() or (
+                path / "bin" / "activate.nu").exists() or (path / "bin" / "Activate.ps1").exists():
+            return True
         return False
-
-    # Check for pyvenv.cfg file - this is the most reliable indicator
-    if (path / "pyvenv.cfg").exists():
-        return True
-
-    # Try to use virtualenv's activation system to detect available scripts
-    if PluginLoader:
-        try:
-            activators = PluginLoader.entry_points_for("virtualenv.activate")
-            # Check if any activation scripts exist
-            for activator_name in ["bash", "batch", "powershell", "fish", "cshell", "nushell"]:
-                if activator_name in activators:
-                    # Check common script locations based on platform
-                    if activator_name == "bash" and (path / "bin" / "activate").exists():
-                        return True
-                    if activator_name == "batch" and (path / "Scripts" / "activate.bat").exists():
-                        return True
-                    if activator_name == "powershell" and (path / "Scripts" / "Activate.ps1").exists():
-                        return True
-                    if activator_name == "fish" and (path / "bin" / "activate.fish").exists():
-                        return True
-                    if activator_name == "cshell" and (path / "bin" / "activate.csh").exists():
-                        return True
-                    if activator_name == "nushell" and (path / "bin" / "activate.nu").exists():
-                        return True
-        except Exception:
-            # Fall back to hardcoded detection
-            pass
-
-    # Fallback: hardcoded detection for compatibility
-    # Windows layout
-    if (path / "Scripts" / "activate.bat").exists() or (path / "Scripts" / "Activate.ps1").exists():
-        return True
-    # POSIX layout
-    if (path / "bin" / "activate").exists():
-        return True
-    # Other shells
-    if (path / "bin" / "activate.fish").exists() or (path / "bin" / "activate.csh").exists() or (
-            path / "bin" / "activate.nu").exists():
-        return True
-    return False
+    except OSError:
+        return False
 
 
 def find_nearest_venv(start: Path) -> Path | None:
@@ -138,20 +136,27 @@ def _list_venvs_in_dir(root: Path) -> list[Path]:
     found: list[Path] = []
     seen: set[Path] = set()
     for name in PREFERRED_NAMES:
-        cand = root / name
-        if is_venv_dir(cand):
-            resolved = cand.resolve()
-            found.append(resolved)
-            seen.add(resolved)
+        try:
+            cand = root / name
+            if is_venv_dir(cand):
+                resolved = cand.resolve()
+                found.append(resolved)
+                seen.add(resolved)
+        except OSError:
+            continue
     # Scan all subdirectories
     try:
-        for child in sorted([p for p in root.iterdir() if p.is_dir()]):
+        children = sorted([p for p in root.iterdir() if p.is_dir()])
+    except OSError:
+        children = []
+    for child in children:
+        try:
             if child.resolve() in seen:
                 continue
             if is_venv_dir(child):
                 found.append(child.resolve())
-    except FileNotFoundError:
-        pass
+        except OSError:
+            continue
     return found
 
 
@@ -259,6 +264,9 @@ def detect_shell(explicit: str | None) -> str:
         return "bash"
     if os.environ.get("FISH_VERSION"):
         return "fish"
+    # csh/tcsh: CSH_VERSION is set by tcsh; CSHLEVEL by csh
+    if os.environ.get("CSH_VERSION") or os.environ.get("CSHLEVEL"):
+        return "cshell"
     # nushell does not (always) export a dedicated var; try a common one if present
     if os.environ.get("NU_VERSION"):
         return "nushell"
@@ -284,11 +292,13 @@ def detect_shell(explicit: str | None) -> str:
             # Normalize common names
             if "zsh" in name:
                 return "zsh"
-            if name in {"bash", "sh"} or "bash" in name:
+            if name in {"bash", "sh", "dash"} or "bash" in name or "dash" in name:
                 return "bash" if "bash" in name else "sh"
             if "fish" in name:
                 return "fish"
-            if name in {"csh", "tcsh"} or "csh" in name or "tcsh" in name:
+            if "tcsh" in name:
+                return "tcsh"
+            if name in {"csh"} or "csh" in name:
                 return "cshell"
             if "nu" in name:
                 return "nushell"
@@ -305,10 +315,14 @@ def detect_shell(explicit: str | None) -> str:
         return "zsh"
     if "fish" in shell:
         return "fish"
-    if "csh" in shell or "tcsh" in shell:
+    if "tcsh" in shell:
+        return "tcsh"
+    if "csh" in shell:
         return "cshell"
     if "nu" in shell or "nushell" in shell:
         return "nushell"
+    if "dash" in shell:
+        return "sh"
     if shell.endswith("sh") and "bash" not in shell:
         return "sh"
     return "bash"
@@ -408,7 +422,7 @@ def _generate_activation_command(script_path: Path, shell: str) -> str:
     elif shell == "fish":
         return f"source '{script_path.as_posix()}'"
     if shell in {"csh", "tcsh", "cshell"}:
-        return f"source {script_path.as_posix()}"
+        return f"source '{script_path.as_posix()}'"
     elif shell in {"nu", "nushell"}:
         # For Nushell we only print the overlay use on the activation script path.
         return f"overlay use \"{script_path.as_posix()}\""
@@ -435,7 +449,7 @@ def _emit_activation_fallback(venv: Path, shell: str) -> str:
     elif shell in {"csh", "tcsh", "cshell"}:
         act = venv / "bin" / "activate.csh"
         if act.exists():
-            return f"source {act.as_posix()}"
+            return f"source '{act.as_posix()}'"
     elif shell in {"nu", "nushell"}:
         # Check for activate.nu in both Windows and POSIX locations and print overlay use on it.
         act_posix = venv / "bin" / "activate.nu"
@@ -443,15 +457,24 @@ def _emit_activation_fallback(venv: Path, shell: str) -> str:
         act = act_posix if act_posix.exists() else act_windows if act_windows.exists() else None
         if act and act.exists():
             return f"overlay use \"{act.as_posix()}\""
-        raise EnvonError(
-            f"Virtual environment '{venv}' does not support Nushell activation: 'activate.nu' is missing. "
-            "Create or upgrade the environment with a tool that generates Nushell activation scripts, "
-            "or use a different shell (bash/zsh/fish)."
+        # Fallback to load-env PATH-model for standard venvs that lack activate.nu
+        bin_dir = (venv / "bin") if (venv / "bin").exists() else (venv / "Scripts")
+        return (
+            f"load-env {{ PATH: ($env.PATH | prepend '{bin_dir.as_posix()}'), "
+            f"_ENVON_PREV_PATH: $env.PATH, "
+            f"VIRTUAL_ENV: '{venv.as_posix()}', "
+            f"VIRTUAL_ENV_PROMPT: '{venv.name}' }}"
         )
     elif shell in {"powershell", "pwsh"}:
-        act = venv / "Scripts" / "Activate.ps1"
-        if act.exists():
-            return f". '{act.as_posix()}'"
+        candidates = [
+            venv / "bin" / "Activate.ps1",
+            venv / "bin" / "activate.ps1",
+            venv / "Scripts" / "Activate.ps1",
+            venv / "Scripts" / "activate.ps1",
+        ]
+        for act in candidates:
+            if act.exists():
+                return f". '{act.as_posix()}'"
     elif shell in {"cmd", "batch", "bat"}:
         act = venv / "Scripts" / "activate.bat"
         if act.exists():
@@ -532,6 +555,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "if omitted, auto-detect the current shell."
         ),
     )
+    if argv and argv[0] == "help":
+        p.print_help()
+        raise SystemExit(0)
     return p.parse_args(argv)
 
 
@@ -714,7 +740,7 @@ def install_bootstrap(shell: str | None) -> str:
     )
     return (
         f"envon bootstrap installed:\n- managed: {managed_file}\n- rc: {config_path}\n"
-        f"Restart your shell or run: {source_cmd} {config_path}"
+        f"Restart your shell or run: {source_cmd} \"{config_path}\""
     )
 
 
@@ -784,22 +810,14 @@ def _ensure_rc_sources_managed(config_path: Path, managed_file: Path, shell: str
     rc_exists = config_path.exists() and config_path.is_file()
     rc_text = config_path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n") if rc_exists else ""
 
-    # If already installed with markers, do nothing
-    if MARK_START in rc_text and MARK_END in rc_text:
-        return
-
     mf = managed_file.as_posix()
     if shell in {"bash", "zsh", "sh"}:
-        block = f"\n{MARK_START}\n[ -f {mf} ] && . {mf}\n{MARK_END}\n"
+        block = f"\n{MARK_START}\n[ -f \"{mf}\" ] && . \"{mf}\"\n{MARK_END}\n"
     elif shell == "fish":
-        block = f"\n{MARK_START}\nif test -f {mf}\n    source {mf}\nend\n{MARK_END}\n"
+        block = f"\n{MARK_START}\nif test -f \"{mf}\"\n    source \"{mf}\"\nend\n{MARK_END}\n"
     elif shell in {"nushell", "nu"}:
         # Always quote the managed file path to avoid extra positional argument errors
-        block = (
-            f"\n{MARK_START}\n"
-            f"if (ls '{mf}' | is-empty) == false {{\n    source '{mf}'\n}}\n"
-            f"{MARK_END}\n"
-        )
+        block = f"\n{MARK_START}\nsource '{mf}'\n{MARK_END}\n"
     elif shell in {"powershell", "pwsh"}:
         block = (
             f"\n{MARK_START}\n"
@@ -807,9 +825,21 @@ def _ensure_rc_sources_managed(config_path: Path, managed_file: Path, shell: str
             f"{MARK_END}\n"
         )
     elif shell in {"csh", "tcsh", "cshell"}:
-        block = f"\n{MARK_START}\nif ( -f {mf} ) source {mf}\n{MARK_END}\n"
+        block = f"\n{MARK_START}\nif ( -f \"{mf}\" ) source \"{mf}\"\n{MARK_END}\n"
     else:
         raise EnvonError(f"Unsupported shell: {shell}")
+
+    # If already installed with markers, check if up to date or update in place
+    if MARK_START in rc_text and MARK_END in rc_text:
+        start_idx = rc_text.find(MARK_START)
+        end_idx = rc_text.find(MARK_END) + len(MARK_END)
+        current_block = rc_text[start_idx:end_idx]
+        if current_block.strip() == block.strip():
+            return
+        new_text = rc_text[:start_idx] + block.strip() + rc_text[end_idx:]
+        with config_path.open("w", encoding="utf-8", newline="\n") as f:
+            f.write(new_text)
+        return
 
     # For POSIX shells on Windows, forcefully rewrite the whole file to cure legacy CR pollution
     force_rewrite = (shell in {"bash", "zsh", "sh", "fish", "csh", "tcsh", "cshell"} and os.name == "nt")
@@ -885,7 +915,13 @@ def _managed_content_for_shell(shell: str) -> str:
     the managed file, while avoiding unnecessary rewrites.
     """
     body = emit_bootstrap(shell)
-    header = f"# envon managed bootstrap - version: {VENV_VERSION}\n"
+    header = f"# envon managed bootstrap - version: {__version__}\n"
+    # For csh/tcsh, embed the real envon path so the alias can invoke the
+    # command without triggering infinite alias recursion.
+    if shell in {"csh", "tcsh", "cshell"}:
+        envon_path = shutil.which("envon") or r"\envon"
+        envon_path_esc = str(envon_path).replace('"', '\\"')
+        header += f'set _envon_cmd = "{envon_path_esc}"\n'
     return header + body
 
 

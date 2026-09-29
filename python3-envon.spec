@@ -1,7 +1,7 @@
 %global srcname envon
 
 Name:           python3-%{srcname}
-Version:        0.1.5
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Cross-shell Python virtual environment activator
 
@@ -43,7 +43,6 @@ install -p -m 0644 src/%{srcname}/bootstrap_sh.sh %{buildroot}%{_datadir}/%{srcn
 install -p -m 0644 src/%{srcname}/bootstrap_fish.fish %{buildroot}%{_datadir}/%{srcname}/
 install -p -m 0644 src/%{srcname}/bootstrap_powershell.ps1 %{buildroot}%{_datadir}/%{srcname}/
 install -p -m 0644 src/%{srcname}/bootstrap_csh.csh %{buildroot}%{_datadir}/%{srcname}/
-install -p -m 0644 src/%{srcname}/bootstrap_csh_fixed.csh %{buildroot}%{_datadir}/%{srcname}/
 install -p -m 0644 src/%{srcname}/bootstrap_nushell.nu %{buildroot}%{_datadir}/%{srcname}/
 
 # Install man page
@@ -61,6 +60,24 @@ install -p -m 0644 docs/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/%{srcname}.1*
 
 %changelog
+* Tue Sep 29 2026 User1995 <userfrom1995@gmail.com> - 0.2.0-1
+- Update to version 0.2.0
+- Add full automatic activation and deactivation for Nushell (nu)
+- Add full support for C-shell (csh) and TC-shell (tcsh) with zero variable leakage
+- Add unbuffered real-time interactive selection menu streaming
+- Add dynamic visual prompt prefix (venv) for Nushell
+- Support stdlib python -m venv environments in Nushell via load-env fallback
+- Add deactivation guard preventing collision with system deactivation scripts
+- Fix PermissionError crashes when traversing restricted directories (OSError)
+- Fix command-line argument separator (--) across all shell wrappers
+
+* Tue Sep 29 2026 User1995 <userfrom1995@gmail.com> - 0.1.6-1
+- Update to version 0.1.6
+- Fix csh/tcsh bootstrap alias to properly handle utility flags
+- Fix nushell bootstrap to avoid parse-time constant errors
+- Remove obsolete bootstrap_csh_fixed.csh reference
+- Ensure quoted paths across all shell wrappers
+
 * Mon Feb 09 2026 User1995 <userfrom1995@gmail.com> - 0.1.5-1
 - Update to version 0.1.5
 - Improve venv resolution logic (active venv > WORKON_HOME)
