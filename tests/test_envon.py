@@ -70,13 +70,14 @@ class TestEnvon(unittest.TestCase):
         from tempfile import TemporaryDirectory
 
         with TemporaryDirectory() as td:
-            root = Path(td)
+            root = Path(td).resolve()
             proj = root / "proj"
             (proj / "sub" / "dir").mkdir(parents=True)
             venv = make_posix_venv(proj / ".venv")
             with TempCwd(proj / "sub" / "dir"):
                 resolved = envon_mod.resolve_target(None)
-                self.assertEqual(resolved, venv)
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.resolve(), venv.resolve())
 
     def test_emit_activation_bash(self):
         from tempfile import TemporaryDirectory
@@ -110,7 +111,11 @@ class TestEnvon(unittest.TestCase):
         with TemporaryDirectory() as td:
             venv = make_windows_venv(Path(td) / ".venv")
             cmd = envon_mod.emit_activation(venv, "powershell")
-            self.assertIn(". '" + (venv / "Scripts" / "Activate.ps1").as_posix() + "'", cmd)
+            scripts_dir = (venv / "Scripts").as_posix().lower()
+            self.assertTrue(
+                cmd.lower().startswith(f". '{scripts_dir}/activate.ps1'"),
+                f"Unexpected command: {cmd}",
+            )
 
     def test_emit_activation_cmd(self):
         from tempfile import TemporaryDirectory
@@ -149,7 +154,11 @@ class TestEnvon(unittest.TestCase):
             venv = make_posix_venv(Path(td) / ".venv")
             (venv / "bin" / "Activate.ps1").write_text("# ps1", encoding="utf-8")
             cmd = envon_mod.emit_activation(venv, "powershell")
-            self.assertIn(". '" + (venv / "bin" / "Activate.ps1").as_posix() + "'", cmd)
+            bin_dir = (venv / "bin").as_posix().lower()
+            self.assertTrue(
+                cmd.lower().startswith(f". '{bin_dir}/activate.ps1'"),
+                f"Unexpected command: {cmd}",
+            )
 
     def test_emit_deactivation_all_shells(self):
         for shell in ["bash", "zsh", "sh", "fish", "csh", "tcsh", "cshell", "nushell", "powershell", "cmd"]:
